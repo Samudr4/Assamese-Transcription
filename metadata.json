@@ -1,0 +1,5 @@
+{
+  "name": "Assamese Auto-Transcription",
+  "description": "An application to automatically transcribe Assamese audio and video files. Upload a file, monitor the transcription progress, and then edit and export the final transcript in various formats.",
+  "requestFramePermissions": []
+}
