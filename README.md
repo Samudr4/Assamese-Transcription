@@ -10,7 +10,7 @@ An application to automatically transcribe Assamese audio and video files using 
 - 📤 **Multiple Export Formats**: Export as TXT, JSON, or SRT files
 - 🌐 **Assamese Language**: Optimized for Assamese language transcription
 - 📱 **Responsive Design**: Works on desktop and mobile devices
-- 🚀 **High Capacity**: Supports files up to 100MB
+- 🚀 **High Capacity**: Supports files up to 250MB
 
 ## Prerequisites
 
@@ -61,17 +61,17 @@ An application to automatically transcribe Assamese audio and video files using 
 
 ## File Requirements
 
-- **Maximum file size**: 100MB
+- **Maximum file size**: 250MB
 - **Supported audio formats**: MP3, WAV, M4A, AAC, OGG
 - **Supported video formats**: MP4, AVI, MOV, WEBM
 - **Language**: Optimized for Assamese language
 
 ## API Integration
 
-This application uses Google's Gemini 1.5 Flash model for transcription. The API:
+This application uses Google's Gemini 2.0 model for transcription. The API:
 - Processes audio and video files directly
 - Provides accurate Assamese language transcription
-- Handles various audio/video formats up to 100MB
+- Handles various audio/video formats up to 250MB
 - Returns clean, formatted text output
 
 ## Development

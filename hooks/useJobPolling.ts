@@ -6,6 +6,7 @@ import { JobStatusEnum } from '../types';
 export const useJobPolling = (jobId: string | undefined) => {
   const [status, setStatus] = useState<JobStatusEnum | null>(null);
   const [transcript, setTranscript] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const pollingRef = useRef<number | null>(null);
@@ -23,6 +24,7 @@ export const useJobPolling = (jobId: string | undefined) => {
     try {
       const response = await getJobStatus(jobId);
       setStatus(response.status);
+      setFileName(response.fileName || null);
       
       if (response.status === JobStatusEnum.COMPLETE) {
         setIsLoading(true);
@@ -58,5 +60,5 @@ export const useJobPolling = (jobId: string | undefined) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobId]);
 
-  return { status, transcript, isLoading, error };
+  return { status, transcript, fileName, isLoading, error };
 };

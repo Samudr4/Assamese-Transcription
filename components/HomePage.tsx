@@ -18,9 +18,18 @@ const HomePage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] animate-fade-in">
-      <h1 className="text-3xl sm:text-4xl font-bold text-white mb-8">Assamese Auto-Transcription</h1>
-      <FileUpload onFileUpload={handleFileUpload} />
+    <div className="flex flex-col items-center justify-center min-h-[50vh] sm:min-h-[60vh] animate-fade-in px-4 sm:px-6">
+      <div className="text-center mb-8 sm:mb-12 max-w-4xl">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 sm:mb-6 leading-tight">
+          Assamese Auto-Transcription
+        </h1>
+        <p className="text-base sm:text-lg md:text-xl text-gray-400 leading-relaxed max-w-2xl mx-auto">
+          Upload your audio or video files and get accurate Assamese transcriptions with English translations powered by AI
+        </p>
+      </div>
+      <div className="w-full max-w-2xl">
+        <FileUpload onFileUpload={handleFileUpload} />
+      </div>
     </div>
   );
 };

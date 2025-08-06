@@ -16,8 +16,8 @@ const jobDatabase = new Map<string, Job>();
 // File processing queue
 const processingQueue: { [key: string]: NodeJS.Timeout } = {};
 
-// File size limits - Reduced for better compatibility
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB - More conservative limit
+// File size limits - Adjusted for Gemini 2.0 API limits
+const MAX_FILE_SIZE = 250 * 1024 * 1024; // 250MB - Safe limit for Gemini 2.0
 const SUPPORTED_AUDIO_TYPES = ['audio/mp3', 'audio/wav', 'audio/m4a', 'audio/aac', 'audio/ogg'];
 const SUPPORTED_VIDEO_TYPES = ['video/mp4', 'video/avi', 'video/mov', 'video/webm'];
 
@@ -36,10 +36,10 @@ export const uploadFile = async (file: File): Promise<{ jobId: string }> => {
       throw new Error(`Invalid file type. Supported formats: Audio (MP3, WAV, M4A, AAC, OGG) and Video (MP4, AVI, MOV, WEBM)`);
     }
 
-    // Validate file size (max 100MB for better compatibility)
+    // Validate file size (max 250MB for Gemini 2.0 compatibility)
     if (file.size > MAX_FILE_SIZE) {
       const maxSizeMB = MAX_FILE_SIZE / (1024 * 1024);
-      throw new Error(`File size too large. Maximum size is ${maxSizeMB}MB for better compatibility.`);
+      throw new Error(`File size too large. Maximum size is ${maxSizeMB}MB for Gemini 2.0 compatibility.`);
     }
 
     const jobId = `job_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -117,39 +117,52 @@ const transcribeWithGemini = async (base64Data: string, mimeType: string): Promi
       throw new Error('API key not configured');
     }
 
-    // Use Gemini 1.5 Flash for better quota efficiency
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    // Use Gemini 2.0 for best accuracy and advanced capabilities
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
 
-    // Enhanced prompt for mixed Assamese-English content with auto-detection
-    const prompt = `Please transcribe the following audio/video file with maximum accuracy. The content may contain a mix of Assamese and English languages.
+    // Enhanced prompt for human voice transcription only - pure Assamese-English dual-language
+    const prompt = `Please transcribe ONLY HUMAN SPEECH/VOICE from the following audio/video file and provide both the original Assamese transcription and English translation.
 
-CRITICAL INSTRUCTIONS FOR MIXED LANGUAGE TRANSCRIPTION:
-1. Listen with extreme care to every word, syllable, and sound
-2. Automatically detect and transcribe both Assamese and English words
-3. Use correct Assamese script (অসমীয়া লিপি) for Assamese words
-4. Use English alphabet for English words and phrases
-5. Maintain the exact meaning, context, and cultural nuances
-6. Preserve the natural flow between languages
-7. Handle code-switching between Assamese and English accurately
-8. Preserve speaker's tone, emotion, and speaking style
-9. If unclear parts exist, mark as [unclear] with timestamp context
-10. For background sounds, indicate with [background: description]
-11. Format with natural paragraph breaks and proper punctuation
-12. Ensure 100% fidelity to the original mixed-language speech
-13. Pay attention to pronunciation patterns in both languages
-14. Handle proper nouns, names, and technical terms correctly
-15. Maintain the original language switching patterns
+CRITICAL VOICE-ONLY TRANSCRIPTION INSTRUCTIONS:
+1. TRANSCRIBE ONLY HUMAN SPEECH - ignore all background sounds, music, sound effects, or non-human audio
+2. Focus exclusively on spoken words by human voices
+3. Do NOT transcribe instrumental music, sound effects, ambient noise, or mechanical sounds
+4. If there are multiple speakers, transcribe all human speech
+5. Skip any sections with only music or background sounds
+6. Only capture actual spoken dialogue, conversations, or monologues
 
-LANGUAGE DETECTION GUIDELINES:
-- If a word is clearly Assamese, transcribe it in Assamese script
-- If a word is clearly English, transcribe it in English alphabet
-- For mixed words or phrases, use the dominant language
-- Preserve the original language mixing pattern
-- Handle proper nouns and names in their original language
+PURE ASSAMESE TRANSCRIPTION RULES:
+1. ONLY use Assamese script (অসমীয়া লিপি) - NO Hindi, Bengali, or other scripts
+2. Transcribe human speech ONLY in pure Assamese language using correct Assamese characters
+3. Do NOT mix Hindi words, phrases, or Devanagari script
+4. Use authentic Assamese vocabulary and expressions
+5. If you encounter Hindi/other language words in speech, convert them to equivalent Assamese terms
+6. Maintain proper Assamese grammar and sentence structure
+7. Use correct Assamese punctuation marks
+8. Preserve the exact pronunciation and tone of human speech in Assamese script only
+9. Mark unclear human speech as [অস্পষ্ট] (unclear speech in Assamese)
+10. DO NOT describe background sounds, music, or non-speech audio
 
-Please provide a highly accurate, word-perfect transcription that preserves the mixed Assamese-English content exactly as spoken.`;
+ENGLISH TRANSLATION REQUIREMENTS:
+1. Provide accurate English translation of ONLY the human speech content
+2. Preserve the speaker's tone, emotion, and cultural context
+3. Use proper English grammar and vocabulary
+4. Handle proper nouns and technical terms appropriately
+5. Ensure the translation flows naturally in English
+6. Do NOT translate or describe non-speech audio elements
 
-    console.log('Sending request to Gemini 1.5 Flash for mixed language transcription (auto-detected)...');
+STRICT FORMAT REQUIREMENTS:
+- Start with "=== ASSAMESE TRANSCRIPTION ==="
+- Provide ONLY pure Assamese text of human speech using অসমীয়া লিপি
+- Then add "=== ENGLISH TRANSLATION ==="
+- Provide ONLY English translation of the human speech
+- NO mixing of scripts or languages within sections
+- Use clear separation between sections
+- EXCLUDE all non-human audio content
+
+IMPORTANT: Focus exclusively on human voice/speech content. Ignore and do not transcribe background music, sound effects, ambient noise, or any non-human audio elements.`;
+
+    console.log('Sending request to Gemini 2.0 for dual-language transcription and translation...');
     const result = await model.generateContent([
       prompt,
       {
@@ -162,7 +175,7 @@ Please provide a highly accurate, word-perfect transcription that preserves the 
     const response = await result.response;
     const transcript = response.text();
     
-    console.log('Mixed language transcription received from Gemini 1.5 Flash');
+    console.log('Dual-language transcription and translation received from Gemini 2.0');
     return transcript || 'Transcription failed. Please try again.';
   } catch (error) {
     console.error('Gemini API error:', error);
@@ -186,13 +199,13 @@ Please provide a highly accurate, word-perfect transcription that preserves the 
   }
 };
 
-export const getJobStatus = async (jobId: string): Promise<{ status: JobStatusEnum }> => {
+export const getJobStatus = async (jobId: string): Promise<{ status: JobStatusEnum; fileName?: string }> => {
   const job = jobDatabase.get(jobId);
   if (!job) {
     throw new Error('Job not found');
   }
   
-  return { status: job.status };
+  return { status: job.status, fileName: job.fileName };
 };
 
 export const getTranscript = async (jobId: string): Promise<{ transcript: string }> => {
