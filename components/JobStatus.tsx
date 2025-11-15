@@ -17,11 +17,11 @@ const statusConfig = {
     gradient: 'from-warning to-orange-500'
   },
   [JobStatusEnum.PROCESSING]: { 
-    text: 'Processing with Gemini 2.0...', 
+    text: 'Processing with Gemini 2.5...', 
     color: 'bg-accent/20 text-accent border-accent/30', 
     icon: 'cpu',
     spinner: true,
-    description: 'Gemini 2.0 is transcribing your audio/video file. This may take a few minutes depending on file size.',
+    description: 'Gemini 2.5 Pro is transcribing your audio/video file with advanced accuracy. This may take a few minutes depending on file size.',
     gradient: 'from-accent to-cyan-500'
   },
   [JobStatusEnum.COMPLETE]: { 

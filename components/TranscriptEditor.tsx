@@ -139,7 +139,7 @@ const TranscriptEditor: React.FC<TranscriptEditorProps> = ({ initialTranscript, 
           {/* Assamese Transcript */}
           <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700/20 overflow-hidden">
             <div className="bg-purple-600/20 px-4 sm:px-6 py-3 border-b border-gray-700/20">
-              <h4 className="text-base sm:text-lg font-semibold text-white">অসমীয়া Translation(Assamese Transcript)</h4>
+              <h4 className="text-base sm:text-lg font-semibold text-white">অসমীয়া Transcription (Assamese Transcript)</h4>
             </div>
             <textarea
               value={assamese}

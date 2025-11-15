@@ -33,7 +33,7 @@ export const useJobPolling = (jobId: string | undefined) => {
         stopPolling();
         setIsLoading(false);
       } else if (response.status === JobStatusEnum.FAILED) {
-        setError('Transcription failed.');
+        setError(response.errorMessage || 'Transcription failed.');
         stopPolling();
         setIsLoading(false);
       } else {
