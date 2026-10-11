@@ -10,8 +10,47 @@ if (!API_KEY) {
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 
-// In-memory "database" to store job states
-const jobDatabase = new Map<string, Job>();
+// Persistent storage key
+const STORAGE_KEY = 'assamese_transcription_jobs_v1';
+
+// Load jobs from localStorage
+const loadJobsFromStorage = (): Map<string, Job> => {
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+    if (!raw) return new Map();
+    const parsed: Array<[string, any]> = JSON.parse(raw);
+    const map = new Map<string, Job>();
+    for (const [id, item] of parsed) {
+      map.set(id, {
+        ...item,
+        createdAt: new Date(item.createdAt),
+      });
+    }
+    return map;
+  } catch (e) {
+    console.warn('Failed to load jobs from localStorage:', e);
+    return new Map();
+  }
+};
+
+// Save jobs to localStorage
+const saveJobsToStorage = (map: Map<string, Job>) => {
+  try {
+    if (typeof window === 'undefined') return;
+    const entries = Array.from(map.entries());
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  } catch (e) {
+    console.warn('Failed to save jobs to localStorage:', e);
+  }
+};
+
+// Initialize job database from storage
+const jobDatabase = loadJobsFromStorage();
+
+const persistJob = (job: Job) => {
+  jobDatabase.set(job.id, job);
+  saveJobsToStorage(jobDatabase);
+};
 
 // File size limits - Adjusted for Gemini 2.0 API limits
 const MAX_FILE_SIZE = 250 * 1024 * 1024; // 250MB - Safe limit for Gemini 2.0
@@ -33,10 +72,10 @@ export const uploadFile = async (file: File): Promise<{ jobId: string }> => {
       throw new Error(`Invalid file type. Supported formats: Audio (MP3, WAV, M4A, AAC, OGG) and Video (MP4, AVI, MOV, WEBM)`);
     }
 
-    // Validate file size (max 250MB for Gemini 2.0 compatibility)
+    // Validate file size (max 250MB)
     if (file.size > MAX_FILE_SIZE) {
       const maxSizeMB = MAX_FILE_SIZE / (1024 * 1024);
-      throw new Error(`File size too large. Maximum size is ${maxSizeMB}MB for Gemini 2.0 compatibility.`);
+      throw new Error(`File size too large. Maximum size is ${maxSizeMB}MB.`);
     }
 
     const jobId = `job_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -45,10 +84,11 @@ export const uploadFile = async (file: File): Promise<{ jobId: string }> => {
       id: jobId,
       status: JobStatusEnum.PENDING,
       fileName: file.name,
+      fileSize: file.size,
       createdAt: new Date(),
     };
     
-    jobDatabase.set(jobId, job);
+    persistJob(job);
     
     // Start processing the file
     processFile(jobId, file);
@@ -68,7 +108,7 @@ const processFile = async (jobId: string, file: File) => {
 
     // Update status to processing
     job.status = JobStatusEnum.PROCESSING;
-    jobDatabase.set(jobId, job);
+    persistJob(job);
 
     // Convert file to base64
     const base64Data = await fileToBase64(file);
@@ -79,7 +119,7 @@ const processFile = async (jobId: string, file: File) => {
     // Update job with transcript
     job.transcript = transcript;
     job.status = JobStatusEnum.COMPLETE;
-    jobDatabase.set(jobId, job);
+    persistJob(job);
     
     console.log('Transcription completed for job:', jobId);
   } catch (error) {
@@ -89,7 +129,7 @@ const processFile = async (jobId: string, file: File) => {
     if (job) {
       job.status = JobStatusEnum.FAILED;
       job.errorMessage = error instanceof Error ? error.message : 'Transcription failed. Please try again.';
-      jobDatabase.set(jobId, job);
+      persistJob(job);
     }
   }
 };
@@ -376,7 +416,7 @@ IMPORTANT: Focus exclusively on human voice/speech content with the highest poss
       if (errorMessage.includes('400')) {
         throw new Error('Invalid file format or file too large. Please try with a smaller file or different format.');
       } else if (errorMessage.includes('401')) {
-        throw new Error('Invalid API key. Please check your Gemini API key configuration.');
+        throw new Error('Invalid API key. Please check your API key configuration.');
       } else if (errorMessage.includes('403')) {
         // For 403, try fallback model if using Pro or Experimental
         if (modelName === 'gemini-2.5-pro' || modelName === 'gemini-2.5-flash' ||
@@ -389,9 +429,9 @@ IMPORTANT: Focus exclusively on human voice/speech content with the highest poss
           console.log(`Access denied for ${modelName}. Switching to Gemini 1.5 Flash...`);
           return transcribeWithGemini(base64Data, mimeType, 'gemini-1.5-flash', 0, maxRetries);
         }
-        throw new Error('API quota exceeded or access denied. Please check your Gemini API settings.');
+        throw new Error('API quota exceeded or access denied. Please check your API settings.');
       } else if (errorMessage.includes('500')) {
-        throw new Error('Gemini API server error. Please try again later.');
+        throw new Error('AI transcription server error. Please try again later.');
       }
     }
     
@@ -433,8 +473,33 @@ export const saveTranscript = async (jobId: string, transcript: string): Promise
   }
   
   job.transcript = transcript;
-  jobDatabase.set(jobId, job);
+  persistJob(job);
   console.log(`Transcript for job ${jobId} saved.`);
   
   return { success: true };
+};
+
+export const getAllJobs = (): Job[] => {
+  return Array.from(jobDatabase.values()).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+};
+
+export const deleteJob = (jobId: string): boolean => {
+  const result = jobDatabase.delete(jobId);
+  if (result) {
+    saveJobsToStorage(jobDatabase);
+  }
+  return result;
+};
+
+export const clearAllJobs = (): void => {
+  jobDatabase.clear();
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  } catch (e) {
+    console.warn('Failed to clear jobs from localStorage:', e);
+  }
 };

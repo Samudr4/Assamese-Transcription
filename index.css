@@ -5,30 +5,62 @@
   box-sizing: border-box;
 }
 
-body {
+html, body {
+  height: 100%;
+  max-height: 100vh;
   margin: 0;
+  overflow: hidden;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
-  min-height: 100vh;
+  height: 100%;
+  max-height: 100vh;
+  overflow: hidden;
 }
 
-/* Custom scrollbar for webkit browsers */
+/* Authentic Assamese Font Rules */
+.font-assamese {
+  font-family: 'Noto Sans Bengali', 'Inter', system-ui, sans-serif;
+  letter-spacing: 0.01em;
+  line-height: 1.8;
+}
+
+/* Glassmorphism Styles */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(30, 41, 59, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.glass-card:hover {
+  border-color: rgba(139, 92, 246, 0.35);
+  background: rgba(30, 41, 59, 0.65);
+}
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(31, 41, 55, 0.5);
+  background: rgba(15, 23, 42, 0.6);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(139, 92, 246, 0.5);
-  border-radius: 4px;
+  background: rgba(139, 92, 246, 0.4);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -37,13 +69,14 @@ body {
 
 /* Focus styles for accessibility */
 *:focus-visible {
-  outline: 2px solid rgba(59, 130, 246, 0.5);
+  outline: 2px solid rgba(139, 92, 246, 0.6);
   outline-offset: 2px;
 }
 
 /* Selection styles */
 ::selection {
-  background-color: rgba(139, 92, 246, 0.3);
-  color: inherit;
+  background-color: rgba(139, 92, 246, 0.35);
+  color: #f1f5f9;
 }
+
 

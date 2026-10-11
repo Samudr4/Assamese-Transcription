@@ -11,6 +11,7 @@ export interface Job {
   status: JobStatusEnum;
   transcript?: string;
   fileName?: string;
+  fileSize?: number;
   errorMessage?: string;
   createdAt: Date;
 }

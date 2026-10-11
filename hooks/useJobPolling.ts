@@ -39,8 +39,8 @@ export const useJobPolling = (jobId: string | undefined) => {
       } else {
         pollingRef.current = window.setTimeout(pollStatus, 3000); // Poll every 3 seconds
       }
-    } catch (err) {
-      setError('An error occurred while fetching job status.');
+    } catch (err: any) {
+      setError(err?.message || 'An error occurred while fetching job status.');
       stopPolling();
       setIsLoading(false);
     }
